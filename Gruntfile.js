@@ -3,6 +3,39 @@ module.exports = function (grunt) {
 	require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks);
 
 	grunt.initConfig({
+		connect: {
+			options: {
+				port: 9001,
+				base: 'tmp',
+				keepalive: false
+			},
+			test: {
+				options: {
+					keepalive: false
+				}
+			},
+			server: {
+				options: {
+					keepalive: true
+				}
+			}
+		},
+		compress: {
+			component: {
+				options: {
+					archive: 'tmp/component.zip',
+					mode: 'zip'
+				},
+				files: [
+					{
+						expand: true,
+						cwd: 'test/fixtures/component/',
+						src: '**',
+						dest: 'component/',
+					}
+				]
+			}
+		},
 		jshint: {
 			options: {
 				jshintrc: '.jshintrc'
@@ -24,7 +57,8 @@ module.exports = function (grunt) {
 				files: {
 					'tmp/config.js': 'test/fixtures/config.js',
 					'tmp/global-config.js': 'test/fixtures/global-config.js',
-					'tmp/baseurl-config.js': 'test/fixtures/baseurl-config.js'
+					'tmp/baseurl-config.js': 'test/fixtures/baseurl-config.js',
+					'tmp/multi-main-config.js': 'test/fixtures/multi-main-config.js'
 				}
 			}
 		},
@@ -43,6 +77,9 @@ module.exports = function (grunt) {
 			},
 			baseUrl: {
 				rjsConfig: 'tmp/baseurl-config.js'
+			},
+			multiMain: {
+				rjsConfig: 'tmp/multi-main-config.js'
 			}
 		}
 	});
@@ -53,20 +90,31 @@ module.exports = function (grunt) {
 		require('fs').mkdirSync(dir);
 	});
 
-	grunt.registerTask('bower-install', function () {
+	grunt.registerTask('bower-install', function (target) {
+		var components = ['jquery', 'underscore', 'requirejs'];
+		if (target === 'multi') {
+			components = ['https://github.com/cesarenaldi/component-multi-main.git'];
+		}
 		require('bower').commands
-			.install(['jquery', 'underscore', 'requirejs'])
+			.install(components)
 			.on('end', this.async());
 	});
+
 
 	grunt.registerTask('test', [
 		'clean',
 		'mkdir:tmp',
 		'copy',
-		'bower-install',
-		'bower',
+		// 'compress:component',
+		// 'connect:test',
+		'bower-install:default',
+		'bower:standard',
+		'bower:global',
+		'bower:baseUrl',
+		'bower-install:multi',
+		'bower:multiMain',
 		'nodeunit',
-		'clean'
+		// 'clean'
 	]);
 
 	grunt.registerTask('default', ['test']);

@@ -22,7 +22,14 @@ module.exports = function (grunt) {
 							return;
 						}
 
-						obj[key] = grunt.file.isDir(val) ? val : val.replace(/\.js$/, '');
+						switch (typeof val) {
+							case 'string':
+								obj[key] = grunt.file.isDir(val) ? val : val.replace(/\.js$/, '');
+								break;
+							case 'object':
+
+								break;
+						}
 					});
 
 					requirejs.tools.useLib(function (require) {
